@@ -39,8 +39,6 @@ import com.jogamp.opengl.GLProfile;
 import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -49,6 +47,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Function;
 import javax.inject.Inject;
 import jogamp.nativewindow.SurfaceScaleUtils;
@@ -67,6 +67,7 @@ import net.runelite.api.SceneTileModel;
 import net.runelite.api.SceneTilePaint;
 import net.runelite.api.Texture;
 import net.runelite.api.TextureProvider;
+import net.runelite.api.events.CanvasSizeChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
@@ -246,6 +247,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	private int modelY;
 	private int modelZ;
 	private int modelOrientation;
+	private GLCapabilities glCaps;
+	private GLProfile glProfile;
 
 	@Override
 	protected void startUp()
@@ -275,9 +278,9 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 
 			GLProfile.initSingleton();
 
-			GLProfile glProfile = GLProfile.get(GLProfile.GL4);
+			glProfile = GLProfile.get(GLProfile.GL4);
 
-			GLCapabilities glCaps = new GLCapabilities(glProfile);
+			glCaps = new GLCapabilities(glProfile);
 			AWTGraphicsConfiguration config = AWTGraphicsConfiguration.create(canvas.getGraphicsConfiguration(), glCaps, glCaps);
 
 			// XXX handle errors here
@@ -1547,28 +1550,76 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		return SurfaceScaleUtils.scale(value, (float) scale);
 	}
 
+
+	Timer resizeTimer = new Timer();
+	Timer textureTimer = new Timer();
+	boolean firstResize = true;
+	@Subscribe
+	public void onCanvasSizeChanged(CanvasSizeChanged event)
+	{
+		//	Wait 1 client tick before recreating the context
+		//	This prevents unnecessary processing and over/under scaling of the context
+
+		resizeTimer.cancel();
+		resizeTimer = new Timer();
+
+		resizeTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				update();
+				// The client will always fire atleast 1 onCanvasSizeChanged event on boot
+				// These dont require reloading the textures
+				if(!firstResize) {
+					//Wait 1 second before reloading textures, its a safe assumption the user is done resizing at this point
+					textureTimer.cancel();
+					textureTimer = new Timer();
+					textureTimer.schedule(new TimerTask() {
+						@Override
+						public void run() {
+							textureArrayId = -1;
+						}
+					}, 1000L);
+				}
+				firstResize = false;
+			}
+		}, 20L);
+		}
+
+	//Recreates the jawtWindow and creates a new glContext based on the old one
+	private void update()
+	{
+		clientThread.invoke(() ->
+			GLUtil.invokeOnGlThread(() ->
+			{
+				jawtWindow = NewtFactoryAWT.getNativeWindow(canvas, jawtWindow.getAWTGraphicsConfiguration());
+				jawtWindow.lockSurface();
+				try
+				{
+					GLDrawableFactory glDrawableFactory = GLDrawableFactory.getFactory(glProfile);
+					glDrawable = glDrawableFactory.createGLDrawable(jawtWindow);
+					glContext = glDrawable.createContext(glContext);
+				}
+				finally
+				{
+					jawtWindow.unlockSurface();
+				}
+
+				glDrawable.setRealized(true);
+				glContext.makeCurrent();
+
+				this.gl = glContext.getGL().getGL4();
+			})
+		);
+	}
+
 	private void glDpiAwareViewport(final int x, final int y, final int width, final int height)
 	{
-		final GraphicsDevice defaultScreenDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-
-		//ScalableSurface.getNat
 		double scaleX, scaleY;
-		// Get scale factor for OSX retina displays - https://stackoverflow.com/a/40399909
-//		if (defaultScreenDevice instanceof CGraphicsDevice)
-//		{
-//			final CGraphicsDevice device = (CGraphicsDevice) defaultScreenDevice;
-//			scaleX = scaleY = device.getScaleFactor();
-//			scaleX = scaleY = 1.0;
-//		}
-//		else
-		{
-			//final Canvas canvas = client.getCanvas();//XXX
-			final AffineTransform t = ((Graphics2D) canvas.getGraphics()).getTransform();
-			scaleX = t.getScaleX();
-			scaleY = t.getScaleY();
-		}
-	//	System.out.println("scale " + scaleX + " "+ scaleY + " - " + String.format("%d,%d,%d,%d", x,y,width,height));
-
+		double scale = ScreenUtil.getDisplayScalingFactor(canvas);
+		final AffineTransform t = ((Graphics2D) canvas.getGraphics()).getTransform();
+		scaleX = t.getScaleX()/scale;
+		scaleY = t.getScaleY()/scale;
+		//System.out.println("scale " + scaleX + " "+ scaleY + " - " + String.format("%d,%d,%d,%d", x,y,width,height));
 		gl.glViewport(
 			getScaledValue(scaleX, x),
 			getScaledValue(scaleY, y),
@@ -1576,3 +1627,4 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			getScaledValue(scaleY, height));
 	}
 }
+

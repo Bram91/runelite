@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>net.runelite</groupId>
 		<artifactId>runelite-parent</artifactId>
-		<version>1.5.33-SNAPSHOT</version>
+		<version>1.6.8-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>client</artifactId>
@@ -125,6 +125,11 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
+			<groupId>net.runelite</groupId>
+			<artifactId>archive-patcher</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.jogamp.jogl</groupId>
 			<artifactId>jogl-all</artifactId>
 			<version>${jogl.version}</version>
@@ -203,8 +208,7 @@
 			<groupId>net.runelite</groupId>
 			<artifactId>client-patch</artifactId>
 			<version>${project.version}</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../client-patch-1.5.33-SNAPSHOT.jar</systemPath>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.runelite</groupId>
@@ -237,8 +241,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
+			<artifactId>mockito-core</artifactId>
+			<version>3.1.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -251,6 +255,12 @@
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-grapher</artifactId>
 			<version>${guice.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>mockwebserver</artifactId>
+			<version>3.7.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -38,6 +38,11 @@ public class Template
 	{
 	}
 
+	public Template(Function<String, String> resourceLoader)
+	{
+		this.resourceLoaders.add(resourceLoader);
+	}
+
 	public String process(String str)
 	{
 		StringBuilder sb = new StringBuilder();

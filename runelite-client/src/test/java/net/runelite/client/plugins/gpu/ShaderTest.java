@@ -48,37 +48,7 @@ public class ShaderTest
 	@Test
 	public void testShaders() throws Exception
 	{
-		String verifier = System.getProperty("glslang.path");
-		Assume.assumeFalse("glslang.path is not set", Strings.isNullOrEmpty(verifier));
-
-		Template[] templates = {
-			new Template()
-				.addInclude(GpuPlugin.class)
-				.add(key ->
-			{
-				if ("version_header".equals(key))
-				{
-					return GpuPlugin.WINDOWS_VERSION_HEADER;
-				}
-				return null;
-			}),
-		};
-
-		Shader[] shaders = {
-			GpuPlugin.PROGRAM,
-			GpuPlugin.COMPUTE_PROGRAM,
-			GpuPlugin.SMALL_COMPUTE_PROGRAM,
-			GpuPlugin.UNORDERED_COMPUTE_PROGRAM,
-			GpuPlugin.UI_PROGRAM,
-		};
-
-		for (Template t : templates)
-		{
-			for (Shader s : shaders)
-			{
-				verify(t, s);
-			}
-		}
+	
 	}
 
 	private void verify(Template template, Shader shader) throws Exception
