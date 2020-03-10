@@ -25,10 +25,13 @@
 package net.runelite.client.plugins.gpu;
 
 import com.jogamp.opengl.GL4;
+import jogamp.nativewindow.macosx.OSXUtil;
+import net.runelite.client.util.OSType;
 
 class GLUtil
 {
 	private static final int ERR_LEN = 1024;
+	private static final OSType OS = OSType.getOSType();
 
 	private static final int[] buf = new int[1];
 
@@ -124,5 +127,17 @@ class GLUtil
 	{
 		buf[0] = renderBuffer;
 		gl.glDeleteRenderbuffers(1, buf, 0);
+	}
+
+	static void invokeOnGlThread(Runnable runnable)
+	{
+		if (OS == OSType.MacOS)
+		{
+			OSXUtil.RunOnMainThread(true, false, runnable);
+		}
+		else
+		{
+			runnable.run();
+		}
 	}
 }

@@ -125,6 +125,13 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.jogamp.jogl</groupId>
+			<artifactId>jogl-all</artifactId>
+			<version>${jogl.version}</version>
+			<classifier>natives-macosx-universal</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.jogamp.gluegen</groupId>
 			<artifactId>gluegen-rt</artifactId>
 			<version>${jogl.version}</version>
@@ -158,6 +165,13 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.jogamp.gluegen</groupId>
+			<artifactId>gluegen-rt</artifactId>
+			<version>${jogl.version}</version>
+			<classifier>natives-macosx-universal</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
 			<groupId>net.runelite</groupId>
 			<artifactId>archive-patcher</artifactId>
 			<version>1.0</version>
@@ -183,7 +197,13 @@
 			<groupId>net.runelite</groupId>
 			<artifactId>client-patch</artifactId>
 			<version>${project.version}</version>
-			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.runelite</groupId>
+			<artifactId>client-patch</artifactId>
+			<version>1.5.33-PATCH</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/../client-patch-1.5.33-SNAPSHOT.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>net.runelite</groupId>
