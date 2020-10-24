@@ -820,11 +820,6 @@ public class TimersPlugin extends Plugin
 
 			switch (npcId)
 			{
-				// Show the countdown when the Sire enters the stunned state.
-				case NpcID.ABYSSAL_SIRE_5888:
-					createGameTimer(ABYSSAL_SIRE_STUN);
-					break;
-
 				// Hide the countdown if the Sire isn't in the stunned state.
 				// This is necessary because the Sire leaves the stunned
 				// state early once all all four respiratory systems are killed.
@@ -871,6 +866,19 @@ public class TimersPlugin extends Plugin
 	public void onGraphicChanged(GraphicChanged event)
 	{
 		Actor actor = event.getActor();
+
+		if (config.showAbyssalSireStun()
+			&& actor instanceof NPC)
+		{
+			int npcId = ((NPC) actor).getId();
+			int graphicID = actor.getGraphic();
+			// Show the countdown when the Sire enters the stunned state.
+			if (npcId == NpcID.ABYSSAL_SIRE_5888
+				&& graphicID != -1)
+			{
+				createGameTimer(ABYSSAL_SIRE_STUN);
+			}
+		}
 
 		if (actor != client.getLocalPlayer())
 		{
